@@ -36,9 +36,12 @@ while(scalar(@ARGV)) {
   my $arg = pop(@ARGV);
   if (-f $arg) {
     $file = $arg;
-  }
-  if ($arg eq "-d") {
+  } elsif ($arg eq "-d") {
     $DEBUG++;
+  } elsif ($arg eq "-dd") {
+    $DEBUG=2;
+  } elsif ($arg eq "-ddd") {
+    $DEBUG=3;
   }
 }
 open(FILE, $file) or die("Cannot open file: $file\n");
