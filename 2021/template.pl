@@ -11,8 +11,8 @@ my $DEBUG = 0;
 sub print_2d_map {
   my ($map) = @_;
 
-  for (my $y = 0; $y < scalar($map); $y++) {
-    for (my $x = 0; $x < scalar($map->[$y]); $x++) {
+  for (my $y = 0; $y < scalar(@$map); $y++) {
+    for (my $x = 0; $x < scalar(@{$map->[$y]}); $x++) {
       print $map->[$y][$x];
     }
     print "\n";
@@ -34,14 +34,20 @@ sub debug {
 my $file = "input.txt";
 while(scalar(@ARGV)) {
   my $arg = pop(@ARGV);
-  if (-f $arg) {
-    $file = $arg;
-  } elsif ($arg eq "-d") {
+  if ($arg eq "-d") {
     $DEBUG++;
   } elsif ($arg eq "-dd") {
     $DEBUG=2;
   } elsif ($arg eq "-ddd") {
     $DEBUG=3;
+  } elsif ($arg =~ /^-/) {
+    die "Invalid parameter: $arg\n";
+  } else {
+    if (-f $arg) {
+      $file = $arg;
+    } else {
+      die "Invalid file: $arg\n";
+    }
   }
 }
 open(FILE, $file) or die("Cannot open file: $file\n");
