@@ -40,6 +40,10 @@ while(scalar(@ARGV)) {
     $DEBUG=2;
   } elsif ($arg eq "-ddd") {
     $DEBUG=3;
+  } elsif ($arg =~ /^(-h|--help)$/) {
+    print "Usage: <script> [-f INPUT-FILE] [-d]\n";
+    print "You can add up to 3 'd' for more debug\n";
+    exit(0);
   } elsif ($arg =~ /^-/) {
     die "Invalid parameter: $arg\n";
   } else {
