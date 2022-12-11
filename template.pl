@@ -7,6 +7,7 @@ use strict;
 
 my $DEBUG = 0;
 
+############ DEBUG FUNCTIONS ##################
 
 sub print_2d_map {
   my ($map) = @_;
@@ -39,8 +40,7 @@ sub debug {
   print @_ if ($DEBUG >= $level);
 }
 
-############ MAIN ##################
-
+############ PARSE ARGUMENTS ##################
 
 my $file = "input.txt";
 while(scalar(@ARGV)) {
@@ -65,16 +65,29 @@ while(scalar(@ARGV)) {
     }
   }
 }
-open(FILE, $file) or die("Cannot open file: $file\n");
+
+############ GLOBAL VARIABLES ##################
 
 my $result = 0;
 
-while (<FILE>) {
-  debug(3, "Read line: $_");
-  chomp;
+############ USERS FUNCTIONS ##################
+
+# sub my func {
+#   my ($var) = @_;
+# }
+#
+
+############ MAIN CODE ##################
+
+open(FILE, $file) or die("Cannot open file: $file\n");
+
+while (my $line = <FILE>) {
+  debug(3, "Read line: $line");
+  chomp $line;
 }
 
 close(FILE);
 
+############ PRINT RESULT ##################
 debug("\n===================================================================\n");
 printf("Result: %d\n", $result);
