@@ -19,6 +19,17 @@ sub print_2d_map {
   }
 }
 
+sub print_2d_map_hash {
+  my $map = shift;
+
+  for (my $y = 0; $y < scalar(keys %$map); $y++) {
+    for (my $x = 0; $x < scalar(keys %{$map->{$y}}); $x++) {
+      print $map->{$y}->{$x};
+    }
+    print "\n";
+  }
+}
+
 sub debug {
   my $level = 1;
   if ($_[0] =~ /^\d+$/) {
