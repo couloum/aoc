@@ -61,12 +61,12 @@ def part2(raw_data):
         _log(" Winning numbers: %s" % (winning_numbers), 1)
         _log(" Card numbers: %s" % (card_numbers), 1)
         _log(" Instances of this card: %s" % (card_instances[card_idx]))
+        points = 0
+        for num in card_numbers:
+            if num in winning_numbers:
+                points += 1
+                _log("%s is a winning number! New card points: %s" % (num, points), 3)
         for i in range(card_instances[card_idx]):
-            points = 0
-            for num in card_numbers:
-                if num in winning_numbers:
-                    points += 1
-                    _log("%s is a winning number! New card points: %s" % (num, points), 3)
             for y in range(1, points + 1):
                 if card_idx + y > 199:
                     break
