@@ -22,23 +22,6 @@ def print_map(map):
             print(map[x][y], end="")
         print("")
 
-def is_part_num(map, row, col):
-    _log("Testing special chars arround '%s' at position [%d][%d]" % (map[row][col], row, col), 2)
-    for i in range(-1, 2):
-        for y in range(-1, 2):
-            _row = row + i
-            _col = col + y
-            if _row >= 0 and _row < len(map):
-                if _col >= 0 and _col < len(map[_row]):
-                    char = map[_row][_col]
-                    _log("Found char '%s' at position [%d][%d]" % (char, _row, _col), 3)
-                    if char == "." or char.isdigit():
-                        continue
-                    _log("%s is a special char at position [%d][%d]" % (char, _row, _col), 2)
-                    return True
-    _log("No special char found arround", 2)
-    return False
-
 def read_data(raw_data):
     races = []
     (raw_times, raw_distances) = raw_data.strip().split("\n")
