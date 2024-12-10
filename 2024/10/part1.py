@@ -138,7 +138,7 @@ def get_result(raw_data):
     for th in trailheads:
         (x,y) = s_to_xy(th)
         _log("Searching for trails with trailhead at coord (%d,%d)" % (x,y))
-        trails += get_trail_paths(map, x, y, [])
+        trails += get_trail_paths(map, x, y, [], [])
         
     # From all possible trails, identify the unique number of trailhead and trailend coordonates
     unique_trails = []
