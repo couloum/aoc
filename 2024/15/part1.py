@@ -32,7 +32,7 @@ def print_map(map, level = 1):
 def print_result(result):
     if args.verbose > 0: 
         print("\n================")
-        print("Result: %s" % (result))
+    print("Result: %s" % (result))
 
 if not os.path.isfile(args.input_file):
     print("Error: file %s does not exist." % (args.input_file), file=sys.stderr)
@@ -131,7 +131,7 @@ def apply_moves(map, moves):
     Return a new map after having applied all movement instructions to the robot
     """
 
-    new_map = map.copy()
+    new_map = copy_map(map)
 
     # First identify robot coordonates
     rx = 0
