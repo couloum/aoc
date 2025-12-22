@@ -122,7 +122,7 @@ def _c(text, fg=None, bg=None, bold=False, italic=False, dark=False, underline=F
 
 def get_distance_index(distances: list, distance: int) -> int:
     """
-    From a list of existing distances, sorted from shorted to longest
+    From a list of existing distances, sorted from shortest to longest
     Identify the index at which a given distance should be located
     Example:
         With array [1, 2, 4 , 5]
@@ -170,105 +170,92 @@ def get_distance_index(distances: list, distance: int) -> int:
 
         
     return -1
-        
-#def add_connection(connections, a, b):
-#    """
-#    Add the connection between a and b into connections_dict.
-#    In case a or b is already connected to other boxes, ensure that
-#    it updates the exitsing connection.
-#    Return the index where connection has been added into connections array.
-#    """
-#
-#    for i in connections:
-#        if a in connections[i]:
-#            connections[i].append(b)
-#            return i
-#        elif b in connections[i]:
-#            connections[i].append(a)
-#            return i
-#    
-#    # If we're here, neither a or b are present in existing connections.
-#    # Create a new one
-#    connections.append([a, b])
-#    return len(connections) - 1
-#
-#def del_connection(connections, a, b):
-#    """
-#    Remove a given connection 
-#    """
     
-def get_circuits(connections, max_junctions):
+def get_when_one_circuit(connections: list, expected_boxes: int) -> int:
     """
-    From an array of connections, containing tuples like (a,b), where a
-    and b are ID of boxes, return an array of crcuits. Each circuit is an array
-    of box ID which are connected together.
-    If max_junctions is provided, only use this number of junctions to define circuits.
-    Note: if 2 connected box are already part of a circuit, they will be skipped and will
-    note be counted in max_junction.
+    From an array of connections, containing junctions in form of tuples like (a,b), where a
+    and b are ID of boxes, return when we form a single big circuit. 
     Example:
-    input:  [(1, 2), (2, 3), (3, 4), (6, 7), (7, 8)]
-    return: [[1, 2, 3, 4], [6, 7, 8]]
+    inputs:
+        connections: [ (1, 2), (2, 3), (3, 4), (6, 7), (7, 8), (8, 9), (8, 5), (8, 6), (5, 2), (5, 3) ]
+        expected_boxes: 9
+    return: 8 (the index)
     """
 
-    # 1st step: create circuits based on all junctions
+    # Internal logic:
+    # - case A: If none of the 2 boxes are in any circuit, create a new circuit
+    # - case B: If the 2 boxes are already in a circuit, do nothing
+    # - case C: If one of the 2 boxes only is already in one circuit only, add the other box in the same circuit
+    # - case D: If one box is in one circuit and the other is in another circuit, merge the 2 circuits
     circuits = []
     cur_junctions = 0
+    seen_boxes = {}
     for (a,b) in connections:
-        found_flag = False
+        found_circuit = {'a': None, 'b': None}
+        seen_boxes[a] = True
+        seen_boxes[b] = True
+        # Check if boxes a and b are present in any circuit
         for i in range(len(circuits)):
-            if a in circuits[i] and b in circuits[i]:
-                # Nothing happen: both boxes were already in group
-                found_flag = True
-                #cur_junctions -= 1
+            if a in circuits[i]:
+                found_circuit['a'] = i
+            if b in circuits[i]:
+                found_circuit['b'] = i
+            if found_circuit['a'] and found_circuit['b']:
                 break
-            elif a in circuits[i]:
-                circuits[i].append(b)
-                found_flag = True
-                break
-            elif b in circuits[i]:
-                circuits[i].append(a)
-                found_flag = True
-                break
-        if not found_flag:
+        
+        _log("Evaluating connection %s (%s,%s): a=%s b=%s" % (_c(f"#{cur_junctions}", "blue"), a, b, found_circuit['a'], found_circuit['b']), 2)
+        # Case A: If none of the 2 boxes are in any circuit
+        if found_circuit['a'] == None and found_circuit['b'] == None:
+            # Create new circuit
+            _log("  Case A: create a new circuit: %s" % ([a,b]), 2)
             circuits.append([a,b])
+        
+        # Case B: If the 2 boxes are already in a circuit
+        elif found_circuit['a'] == found_circuit['b']:
+            # do nothing
+            _log("  Case B: do nothing: %s" % (circuits[found_circuit['a']]), 2)
+        
+        # Case C: If one of the 2 boxes only is already in one circuit only
+        elif found_circuit['a'] == None or found_circuit['b'] == None:
+            # add the other box in the same circuit
+            if found_circuit['a'] != None:
+                box_found = a
+                box_to_append = b
+                circuit_to_update = found_circuit['a']
+            else:
+                box_found = b
+                box_to_append = a
+                circuit_to_update = found_circuit['b']
+
+            circuits[circuit_to_update].append(box_to_append)
+            _log("  Case C: found box %d in circuit #%d. Add box %d to it: %s" % (box_found, circuit_to_update, box_to_append, circuits[circuit_to_update]), 2)
+       
+        # Case D: If one box is in one circuit and the other is in another circuit
+        else:
+            # merge the 2 circuits
+            circuits[found_circuit['a']] += circuits[found_circuit['b']]
+            circuits[found_circuit['b']] = []
+            _log("  Case D: Merge circuit %d into %d: %s" % (found_circuit['b'], found_circuit['a'], circuits[found_circuit['a']]), 2)
+
+
+        # Remove empty circuits
+        while [] in circuits:
+            circuits.remove([])
+
+        _log("  Circuits: %s" % (circuits), 2)
+        
+
+        if len(seen_boxes.keys()) == expected_boxes:
+            if len(circuits) == 1:
+                _log("seen_boxes: %s" % (seen_boxes.keys()))
+                _log("One big circuit: %s" % (sorted(circuits[0])))
+                return cur_junctions
+            
         cur_junctions += 1
+            
+    _log("Circuits: %s" % (circuits))
 
-        if cur_junctions >= max_junctions:
-            _log("Reached %d junctions. break!" % (cur_junctions))
-            break
-
-    _log("Crcuits before merge: %s" % (circuits))
-
-     # 2nd step: Check if a box is not in 2 circuits. In which case, merge these circuits together
-    change_flag = True
-    while change_flag:
-        change_flag = False
-        for i in range(len(circuits)):
-            c = circuits[i]
-            for b in c:
-                for j in range(i + 1, len(circuits)):
-                    c2 = circuits[j]
-                    if b in c2:
-                        # All that circuit will be merged with the other
-                        _log("Merging:",2)
-                        _log("- Box %d" % (b), 2)
-                        _log("- circuit %s" % (c2), 2)
-                        _log("- circuit %s" % (c), 2)
-                        circuits[i] += c2
-                        del(circuits[j])
-                        _log("- New circuit %s" % (circuits[i]), 2)
-                        change_flag = True
-                        break
-                if change_flag:
-                    break
-            if change_flag:
-                break
-
-    # 3rd step: deduplicate boxes inside of each circuit
-    circuits = [list(set(x)) for x in circuits]
-    
-    _log("Circuits after merge: %s" % (circuits))
-    return circuits
+    return None
         
 
 def get_result(raw_data):
@@ -277,8 +264,6 @@ def get_result(raw_data):
     """
     # Total will be the result from the puzzle in most cases
     total = 0
-
-    max_junctions = 1000
 
     # Logic of this puzzle:
     # =====================
@@ -296,9 +281,7 @@ def get_result(raw_data):
     for line in raw_data.split("\n"):
         boxes.append(tuple([int(x) for x in line.split(",")]))
 
-    # We are using sample data
-    if len(boxes) < 100:
-        max_junctions = 10
+    max_junctions = 8 * len(boxes)
     
     # Create an array with distances between boxes. We'll use it to compare distances
     distances = []
@@ -308,6 +291,7 @@ def get_result(raw_data):
 
     # Now, parse all boxes together
     for i in range(len(boxes) - 1):
+        _log("Evaluating box ID %d with others" % (i))
         for j in range(i+1, len(boxes)):
             b1 = boxes[i]
             b2 = boxes[j]
@@ -323,7 +307,7 @@ def get_result(raw_data):
 
             # Identify position
             idx = get_distance_index(distances, distance)
-            if idx >= 2 * max_junctions:
+            if idx >= max_junctions:
                 _log("Connection #%04d (%d,%d,%d)<->#%04d (%d,%d,%d): distance is too big (d=%d, idx=%d)" % (
                     i, b1[0], b1[1], b1[2],
                     j, b2[0], b2[1], b2[2],
@@ -340,8 +324,7 @@ def get_result(raw_data):
                 distance, idx
             ), 3)
 
-            # Keep 2 x the maximum number of junctions, because we might skip some 
-            if len(distances) > 2 * max_junctions:
+            if len(distances) > max_junctions:
                 d = distances.pop()
                 (c1, c2) = connections.pop()
                 b1 = boxes[c1]
@@ -352,33 +335,30 @@ def get_result(raw_data):
                     d
                 ), 3)
 
+
+
     
     _log("Distances: %s" % (distances))
     _log("Connections: %s" % (connections))
     
-    # Now that we have all closest connections, calculate the one that are groupped together
-    circuits = get_circuits(connections, max_junctions)
+    # Now that we have all closest connections, calculate when we form 1 big circuit with all boxes
+    junction_idx = get_when_one_circuit(connections, len(boxes))
+    if not junction_idx:
+        print("Error: not enough junctions to form one big circuit with all boxes")
+        sys.exit(1)
+    
+    _log("Junction ID that connect all boxes: %d" % (junction_idx))
+    
+    # Get x coordonate of each box. That's the total
+    box_a = connections[junction_idx][0]
+    box_b = connections[junction_idx][1]
 
-    # Sort circuits by number of items in it
-    circuits.sort(key=len, reverse=True)
-    _log("Found circuits: %s" % (circuits))
+    _log("Boxes in that junction: (%d,%d)" % (box_a, box_b))
+    _log("Coordonate of boxes:")
+    _log("- A: (%d, %d, %d)" % (boxes[box_a]))
+    _log("- B: (%d, %d, %d)" % (boxes[box_b]))
 
-    for i in range(len(circuits)):
-        c = circuits[i]
-        for b in c:
-            for j in range(i+1, len(circuits)):
-                c2 = circuits[j]
-                for b2 in c2:
-                    if b == b2:
-                        _log("same box found in 2 circuits: %d %d" % (b, b2))
-                        _log("%s" % (c))
-                        _log("%s" % (c2))
-
-    # Take size of 3 largest circuits and multiply them together
-    total = 1
-    for g in circuits[0:3]:
-        total *= len(g)
-        _log("Found group of size %d. new total = %d" % (len(g), total))
+    total = boxes[box_a][0] * boxes[box_b][0]
     
     return total
     
