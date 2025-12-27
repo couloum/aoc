@@ -150,11 +150,13 @@ def get_result(raw_data):
     for t1 in tiles_xy:
         for t2 in tiles_xy[cur_tile+1:]:
             if is_inside(t1, t2, prepared):
-                _log("Rectangle formed by %s<->%s is inside the walls" % (t1, t2))
+                _log(_c("Rectangle formed by %s<->%s is inside the walls" % (t1, t2), "green"), 2)
                 area = (abs(t2[0] - t1[0]) + 1 ) * (abs(t2[1] - t1[1]) + 1)
                 if area > max_area:
                     _log("New max area of %d with tiles (%d,%d) and (%d,%d)" % (area, t1[0], t1[1], t2[0], t2[1]))
                     max_area = area
+            else:
+                _log(_c("Rectangle formed by %s<->%s is not inside the walls" % (t1, t2), "red"), 2)
         cur_tile += 1
 
     total = max_area
